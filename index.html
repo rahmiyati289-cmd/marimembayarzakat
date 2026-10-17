@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Misi Zakat Fitrah - Game Edukasi PAI Kelas 5</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --accent: #d97706;
+            --bg: #f0fdf4;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --success: #16a34a;
+            --danger: #dc2626;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #0f172a;
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 700px;
+            background: var(--bg);
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            border: 4px solid #3b82f6;
+            position: relative;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: #dbeafe;
+            padding: 10px;
+            font-weight: bold;
+            color: #1e40af;
+            border-bottom: 2px solid #bfdbfe;
+        }
+
+        .content {
+            padding: 20px;
+            min-height: 380px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            margin-top: 15px;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .opt-btn {
+            background: white;
+            border: 2px solid #cbd5e1;
+            padding: 14px;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .opt-btn:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .asnaf-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .asnaf-card {
+            background: white;
+            border: 2px solid #94a3b8;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .asnaf-card.selected {
+            background: #2563eb;
+            color: white;
+            border-color: #1d4ed8;
+        }
+
+        .question-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .center-screen {
+            text-align: center;
+        }
+
+        .icon-large {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        /* Responsive */
+        @media (min-width: 500px) {
+            .options-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <header>
+        <h1>🌙 MISI ZAKAT FITRAH</h1>
+        <p>PAI Kelas 5 • Bab 4: Hidup Lapang dengan Berbagi</p>
+    </header>
+
+    <div class="stats-bar">
+        <div>⭐ Skor: <span id="score">0</span></div>
+        <div>🎯 Level: <span id="level-display">1 / 3</span></div>
+    </div>
+
+    <div id="screen" class="content">
+        <!-- Tampilan interaktif game diisi via JavaScript -->
+    </div>
+</div>
+
+<script>
+    // System Web Audio API untuk efek suara tanpa file eksternal
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(freq, type, duration) {
+        try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+            osc.stop(audioCtx.currentTime + duration);
+        } catch (e) {}
+    }
+
+    function soundCorrect() {
+        playSound(523.25, 'sine', 0.15); // C5
+        setTimeout(() => playSound(659.25, 'sine', 0.2), 100); // E5
+        setTimeout(() => playSound(783.99, 'sine', 0.3), 200); // G5
+    }
+
+    function soundWrong() {
+        playSound(220, 'sawtooth', 0.2);
+        setTimeout(() => playSound(180, 'sawtooth', 0.3), 150);
+    }
+
+    // Game Data
+    let currentScore = 0;
+    let currentLevel = 1;
+    let quizIndex = 0;
+
+    const quizQuestions = [
+        {
+            q: "Apa pengertian Zakat Fitrah berdasarkan materi PAI Kelas 5?",
+            options: [
+                "Zakat harta simpanan yang dibayarkan setiap tahun",
+                "Zakat yang dikeluarkan untuk membersihkan diri dari dosa dan menyucikan jiwa",
+                "Sedekah sukarela setelah sholat Idul Fitri",
+                "Bantuan khusus untuk pembangunan masjid"
+            ],
+            ans: 1
+        },
+        {
+            q: "Apa hukum menunaikan Zakat Fitrah bagi setiap muslim yang mampu?",
+            options: [
+                "Sunnah Muakkad",
+                "Fardhu Kifayah",
+                "Wajib",
+                "Mubah"
+            ],
+            ans: 2
+        },
+        {
+            q: "Kapan waktu WAJIB menunaikan zakat fitrah?",
+            options: [
+                "Awal bulan Ramadan",
+                "Sejak terbenam matahari di akhir Ramadan sampai sebelum Sholat Idul Fitri",
+                "Setelah selesai pelaksanaan Sholat Idul Fitri",
+                "Bapan saja sepanjang tahun"
+            ],
+            ans: 1
+        }
+    ];
+
+    const screen = document.getElementById('screen');
+    const scoreEl = document.getElementById('score');
+    const levelEl = document.getElementById('level-display');
+
+    // Start Screen
+    function showStartScreen() {
+        screen.innerHTML = `
+            <div class="center-screen">
+                <div class="icon-large">📦🤲</div>
+                <h2>Selamat Datang, Detektif Zakat!</h2>
+                <p style="margin: 10px 0; color: #475569;">Bantu panitia masjid mengumpulkan zakat fitrah dan salurkan kepada yang berhak!</p>
+                <button class="btn" onclick="startLevel1()">Mulai Misi Game 🚀</button>
+            </div>
+        `;
+    }
+
+    // LEVEL 1: Kuis Pilihan Ganda
+    function startLevel1() {
+        currentLevel = 1;
+        levelEl.innerText = "1 / 3";
+        showQuizQuestion();
+    }
+
+    function showQuizQuestion() {
+        if (quizIndex >= quizQuestions.length) {
+            startLevel2();
+            return;
+        }
+
+        const qData = quizQuestions[quizIndex];
+        let optionsHtml = '';
+        qData.options.forEach((opt, idx) => {
+            optionsHtml += `<button class="opt-btn" onclick="checkQuizAnswer(${idx})">${opt}</button>`;
+        });
+
+        screen.innerHTML = `
+            <div class="question-title">Soal ${quizIndex + 1}: ${qData.q}</div>
+            <div class="options-grid">${optionsHtml}</div>
+        `;
+    }
+
+    function checkQuizAnswer(selectedIdx) {
+        if (selectedIdx === quizQuestions[quizIndex].ans) {
+            soundCorrect();
+            currentScore += 10;
+            scoreEl.innerText = currentScore;
+            alert("✨ Benar sekali!");
+        } else {
+            soundWrong();
+            alert("❌ Kurang tepat, pelajari catatannya lagi ya!");
+        }
+        quizIndex++;
+        showQuizQuestion();
+    }
+
+    // LEVEL 2: Hitung Takaran Beras Zakat
+    function startLevel2() {
+        currentLevel = 2;
+        levelEl.innerText = "2 / 3";
+        screen.innerHTML = `
+            <div class="center-screen">
+                <div class="icon-large">⚖️🌾</div>
+                <h3>LEVEL 2: TUGAS PANITIA ZAKAT</h3>
+                <p style="margin: 10px 0; color: #334155;">
+                    Sebuah keluarga terdiri dari <b>4 orang</b> (Ayah, Ibu, dan 2 Anak).<br>
+                    Berapa total beras yang harus diserahkan jika takaran zakat fitrah per orang adalah <b>2,5 kg</b>?
+                </p>
+                <input type="number" id="calc-input" placeholder="Masukkan jumlah (kg)" style="padding: 10px; width: 180px; font-size: 1.1rem; text-align: center; border-radius: 8px; border: 2px solid #94a3b8; margin-top: 10px;"><br>
+                <button class="btn" onclick="checkLevel2()">Kirim Jawaban</button>
+            </div>
+        `;
+    }
+
+    function checkLevel2() {
+        const val = parseFloat(document.getElementById('calc-input').value);
+        if (val === 10) {
+            soundCorrect();
+            currentScore += 20;
+            scoreEl.innerText = currentScore;
+            alert("🎉 Tepat! 4 orang x 2,5 kg = 10 kg beras!");
+            startLevel3();
+        } else {
+            soundWrong();
+            alert("❌ Coba hitung lagi: 4 dikali 2,5 kg.");
+        }
+    }
+
+    // LEVEL 3: Pilih 8 Golongan Penerima Zakat (Asnaf)
+    const asnafList = [
+        { name: "Fakir", isAsnaf: true },
+        { name: "Orang Kaya", isAsnaf: false },
+        { name: "Miskin", isAsnaf: true },
+        { name: "Amil Zakat", isAsnaf: true },
+        { name: "Pedagang Sukses", isAsnaf: false },
+        { name: "Muallaf", isAsnaf: true },
+        { name: "Riqab (Hamba Sahaya)", isAsnaf: true },
+        { name: "Gharimin (Berhutang)", isAsnaf: true },
+        { name: "Fisabilillah", isAsnaf: true },
+        { name: "Ibnu Sabil", isAsnaf: true },
+        { name: "Pejabat Negeri", isAsnaf: false }
+    ];
+
+    let selectedAsnaf = [];
+
+    function startLevel3() {
+        currentLevel = 3;
+        levelEl.innerText = "3 / 3";
+        selectedAsnaf = [];
+
+        let cardsHtml = '';
+        asnafList.forEach((item, idx) => {
+            cardsHtml += `<div class="asnaf-card" id="asnaf-${idx}" onclick="toggleAsnaf(${idx})">${item.name}</div>`;
+        });
+
+        screen.innerHTML = `
+            <div class="center-screen">
+                <h3>LEVEL 3: SORTIR GOLONGAN ASNAF</h3>
+                <p style="margin: 5px 0 15px 0; color: #475569;">Pilih semua golongan yang <b>BERHAK</b> menerima zakat fitrah (8 Asnaf)!</p>
+                <div class="asnaf-container">${cardsHtml}</div>
+                <button class="btn" onclick="checkLevel3()" style="margin-top: 20px;">Selesaikan Misi 🏆</button>
+            </div>
+        `;
+    }
+
+    function toggleAsnaf(idx) {
+        const card = document.getElementById(`asnaf-${idx}`);
+        if (selectedAsnaf.includes(idx)) {
+            selectedAsnaf = selectedAsnaf.filter(i => i !== idx);
+            card.classList.remove('selected');
+        } else {
+            selectedAsnaf.push(idx);
+            card.classList.add('selected');
+        }
+    }
+
+    function checkLevel3() {
+        let correctCount = 0;
+        let incorrectCount = 0;
+
+        selectedAsnaf.forEach(idx => {
+            if (asnafList[idx].isAsnaf) correctCount++;
+            else incorrectCount++;
+        });
+
+        if (correctCount === 8 && incorrectCount === 0) {
+            soundCorrect();
+            currentScore += 30;
+            scoreEl.innerText = currentScore;
+            showWinScreen();
+        } else {
+            soundWrong();
+            alert(`⚠️ Masih ada yang keliru! Kamu memilih ${correctCount} golongan benar dan ${incorrectCount} yang salah. Ingat, ada tepat 8 golongan Asnaf!`);
+        }
+    }
+
+    // Win Screen & Summary
+    function showWinScreen() {
+        screen.innerHTML = `
+            <div class="center-screen">
+                <div class="icon-large">🏆🌟</div>
+                <h2>SELAMAT! MISI SELESAI!</h2>
+                <p style="font-size: 1.2rem; font-weight: bold; color: #15803d; margin: 10px 0;">Total Skor Anda: ${currentScore} Poin</p>
+                <div style="background: #f0fdf4; border: 2px dashed #16a34a; padding: 15px; border-radius: 12px; margin: 15px 0; text-align: left; font-size: 0.95rem; line-height: 1.5;">
+                    <b>💡 Kesimpulan Materi:</b><br>
+                    <i>"Dengan membayar zakat fitrah, kita belajar berbagi dan hidup lapang hati. Membantu sesama membuat kehidupan lebih berkah dan penuh kepedulian."</i>
+                </div>
+                <button class="btn" onclick="location.reload()">Main Lagi 🔄</button>
+            </div>
+        `;
+    }
+
+    // Jalankan Game Pertama Kali
+    showStartScreen();
+</script>
+</body>
+</html>
